@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"python.analysis.diagnosticMode": "workspace",
+		"files.exclude": {
+			"**/__pycache__": true
+		}
+	}
+}
