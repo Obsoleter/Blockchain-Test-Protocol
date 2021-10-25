@@ -3,8 +3,9 @@ import threading
 import concurrent.futures
 
 
+# Protocol Constants
 HEADER_OPERATION_MAX_SIZE = 32
-"""Maximum TestHeader Operation field size"""
+"""Maximum TestHeader Operation field size."""
 
 HEADER_PAYLOAD_MAX_SIZE = 1024
 """Maximum Payload size.
@@ -24,36 +25,18 @@ PACKET_MAX_SIZE = (
             HEADER_PAYLOAD_MAX_SIZE + 
             len(HEADER_PACKET_END_DELIMITER)
             )
-"""Determines the Maximum size of Packet
-"""
+"""Determines the Maximum size of Packet."""
 
 PACKET_SIZE_BYTES = 2
 """The Size of Size Field itself.
 
-This constant is used for Packet transfer
+This constant is used for Packet transfer.
 """
 
 HEADER_DATA_CODING = 'utf-8'
-"""Determines used Coding for a packet transfer.
-"""
+"""Determines used Coding for a packet transfer."""
 
-class TestMessageHeader:
-    """Abstract Class determining the structure of a message sent among the Test network.
-
-    Use Concrete Classes determining the exact operations.
-
-    Structure:
-        size: Tells how much bytes to receive to get the Respond.
-            The size of operation + payload + delimiter fields.
-            Field size itself is 2 bytes
-        operation: Determines the operation a Device wants to operate.
-            Used to show what the Device wants to get or make completed.
-        payload: Any information, corresponding to the Operation.
-            Used to describe an exact thing a Device wants to achieve.
-        delimiter: Used to mark the end of Packet.
-    """
-
-    ALLOWED_OPERATIONS = (
+ALLOWED_OPERATIONS = (
         b'CLIENT_CONNECT',
         b'CLIENT_GET',
         b'CLIENT_OK',
@@ -62,23 +45,52 @@ class TestMessageHeader:
         b'SERVER_SENT',
         b'SERVER_DISCONNECTED'
     )
+"""Protocol Allowed Operations."""
 
-    class UnknownOperation(Exception):
-        """Used unknown operation in the operation field."""
 
-    class PayloadSizeIsOutOfBounds(Exception):
-        """The size of the payload is greater than HEADER_PAYLOAD_MAX_SIZE."""
+# Protocol Raises
+class TestProtocolException(Exception):
+    """Base Test Protocol Exception.
 
-    class PacketEndDelimiterIsMissing(Exception):
-        """There's no HEADER_PACKET_END_DELIMITER determed.
-        This probably tells that packet was corrupted.
-        """
+    Every Test Protocol Exception Class inherits this class.
+    
+    Used to catch any Exception related to the Protocol
+    """
 
-    class PacketSizeIsOutOfBounds(Exception):
-        """The size of a Packet is greater than PACKET_MAX_SIZE"""
+class UnknownOperation(TestProtocolException):
+    """Used unknown operation in the operation field."""
+
+class PayloadSizeIsOutOfBounds(TestProtocolException):
+    """The size of the payload is greater than HEADER_PAYLOAD_MAX_SIZE."""
+
+class PacketEndDelimiterIsMissing(TestProtocolException):
+    """There's no HEADER_PACKET_END_DELIMITER determined.
+    This highly likely tells that packet was corrupted.
+    """
+
+class PacketSizeIsOutOfBounds(TestProtocolException):
+    """The size of a Packet is greater than PACKET_MAX_SIZE"""
+
+
+# Protocol Classes
+class TestMessageHeader:
+    """Abstract Class determining the structure of a message sent among the Test network.
+
+    Use Concrete Classes determining the exact operations.
+
+    Structure:
+        size: Tells how much bytes to receive to get the Respond.
+            The size of operation + payload + delimiter fields.
+            Field size itself is told by PACKET_SIZE_BYTES.
+        operation: Determines the operation a Device wants to operate.
+            Used to show what the Device wants to get or make completed.
+        payload: Any information, corresponding to the Operation.
+            Used to describe an exact thing a Device wants to achieve.
+        delimiter: Used to mark the end of Packet.
+    """
 
     def __init__(self, size: int, operation: bytes, payload: bytes = b'', delimiter: bytes = HEADER_PACKET_END_DELIMITER) -> None:
-        """Message constructor.
+        """TestHeader constructor.
         
         Args:
             size: Tells how much bytes to receive to get the Respond.
@@ -95,19 +107,20 @@ class TestMessageHeader:
             PayloadSizeIsOutOfBounds: The size of the payload is greater than HEADER_PAYLOAD_MAX_SIZE
             PacketEndDelimiterIsMissing: There's no HEADER_PAYLOAD_END_DELIMITER
                 determed in the end of payload field.
+            PacketSizeIsOutOfBounds: Packet size is greater than PACKET_MAX_SIZE.
         """
 
         if size > PACKET_MAX_SIZE:
-            raise TestMessageHeader.PacketSizeIsOutOfBounds('Packet size is out of bounds!')
+            raise PacketSizeIsOutOfBounds('Packet size is out of bounds!')
 
-        if operation not in TestMessageHeader.ALLOWED_OPERATIONS:
-            raise TestMessageHeader.UnknownOperation('Unknown operation has been given!')
+        if operation not in ALLOWED_OPERATIONS:
+            raise UnknownOperation('Unknown operation has been given!')
 
         if len(payload) > HEADER_PAYLOAD_MAX_SIZE:
-            raise TestMessageHeader.PayloadSizeIsOutOfBounds('Payload size is out of bounds!')
+            raise PayloadSizeIsOutOfBounds('Payload size is out of bounds!')
 
         if delimiter != HEADER_PACKET_END_DELIMITER:
-            raise TestMessageHeader.PacketEndDelimiterIsMissing('Packet end delimiter is missing!')
+            raise PacketEndDelimiterIsMissing('Packet end delimiter is missing!')
 
         self.size = size
         self.operation = operation
@@ -127,7 +140,7 @@ class TestMessageHeader:
 
         size = len(self.operation) + len(self.payload) + len(self.delimiter)
         if size > PACKET_MAX_SIZE:
-            raise TestMessageHeader.PacketSizeIsOutOfBounds('New Packet size is out of bounds!')
+            raise PacketSizeIsOutOfBounds('New Packet size is out of bounds!')
         else:
             self.size = size
 

@@ -34,7 +34,13 @@ header = modules.Header.headers.TestOperationClientGet()
 manager.send(header)
 print_header(header)
 
-# Get Info
+# Get Info 3 Times
+header = manager.recv()
+print_header(header)
+
+header = manager.recv()
+print_header(header)
+
 header = manager.recv()
 print_header(header)
 

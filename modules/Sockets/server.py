@@ -2,6 +2,9 @@ import socket
 import threading
 import concurrent.futures
 
+import modules.Sockets.headers as TestHeaders
+import modules.Header.headers as ProtocolHeaders
+
 
 # Server settings
 SERVER_ADDRESS = 'localhost'
@@ -51,20 +54,31 @@ def server_connection(client: socket.socket, addr: str):
     print(f'[Client: {addr}] Connected!')
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
+        manager = TestHeaders.TestHeaderNetworkManager(client)
+        info_result = 'None'
+        
+        # Handle client behaviour
         try:
-            respond = executor.submit(client.recv, 32)
-            payload = respond.result(2).decode('utf-8')
+            respond = executor.submit(manager.recv).result(2)
+            info_result = 'Connection established!'
             
+        # Handle client Time Out
         except concurrent.futures.TimeoutError:
-            payload = 'Client doesn\'t send anything!'
-            client.send(b'Sussy baka!')
+            info_result = 'Client doesn\'t send anything!'
 
+        # Handle client
         else:
-            client.send(b'OK')
+            if respond.operation == b'CLIENT_CONNECT':
+                manager.send(ProtocolHeaders.TestOperationServerConnected())
+                manager.send(ProtocolHeaders.TestOperationServerSent(b'19 dollar Fortnine card...'))
+                manager.send(ProtocolHeaders.TestOperationServerSent(b'Who wants it?'))
+                manager.send(ProtocolHeaders.TestOperationServerSent(b'And yes, I\'m giving it away.'))
 
+        # Close connection with client
         finally:
-            print(f'[Client: {addr}] ' + f'\'{payload}\'')
+            manager.send(ProtocolHeaders.TestOperationServerDisconnected())
             client.close()
+            print(f'[Client: {addr}] {info_result}')
 
 
 # Server loop
@@ -90,24 +104,21 @@ def main():
 
     while True:
         console = input().lower()
-        
-        if console == 'quit':
-            break
 
-        elif console == 'clear' or console == 'cls':
-            import os
-            os.system('cls')
+        if console == 'help':
+            print('\nquit - Shuts down the server.')
+            print('threads(thr) - Current Threads count.')
+            print('clear(cls) - Clears the console.\n')
+        
+        elif console == 'quit':
+            break
 
         elif console == 'threads' or console == 'thr':
             print(f'Current threads count: {threading.active_count()}')
 
-        elif console == 'help':
-            print('\nquit - Shuts down the server.')
-            print('threads(thr) - Current Threads count.')
-            print('clear(cls) - Clears the console.\n')
-
-        elif console == 'sus':
-            print('Amogus')
+        elif console == 'clear' or console == 'cls':
+            import os
+            os.system('cls')
 
         else:
             print('Unknown command!')

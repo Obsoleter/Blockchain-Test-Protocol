@@ -35,8 +35,16 @@ print_header(header)
 header = manager.recv()
 print_header(header)
 
-# Send SERVER_SENT
+# Send SERVER_SENT 3 Times
 header = modules.Header.headers.TestOperationServerSent(b'Hello Susy Baka!')
+manager.send(header)
+print_header(header)
+
+header = modules.Header.headers.TestOperationServerSent(b'Skibidi bab m-dada!')
+manager.send(header)
+print_header(header)
+
+header = modules.Header.headers.TestOperationServerSent(b'You\'re real sussy over there')
 manager.send(header)
 print_header(header)
 
