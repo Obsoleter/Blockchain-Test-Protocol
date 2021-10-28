@@ -1,7 +1,7 @@
 from .blockchain import Blockchain, Block, HashManager
 
 # Import Raises
-from .blockchain import InvalidHash, InvalidBlockOrder, InvalidBlockchainNumber, InvalidLink
+from .blockchain import InvalidHash, InvalidBlockOrder, InvalidBlockchainNumber, InvalidLink, InvalidBlockNumber
 
 
 class BlockchainValidator:
@@ -16,6 +16,22 @@ class BlockchainValidator:
 
         self.hash_manager = hash_manager
 
+    def validate_block_by_number(self, chain: Blockchain, num: int):
+        """Checks if a block number is valid and not out of bounds.
+        
+        Throws exception if is not.
+        
+        Args:
+            chain: Blockchain to find a block in.
+            num: Number of block to check.
+            
+        Raises:
+            InvalidBlockNumber: Invalid block number was given or block with this num doesn't exist.
+        """
+
+        if num < 1 or num > chain.num:
+            raise InvalidBlockNumber(f"Invalid block number: {num}!")
+
     def validate_block(self, block: Block):
         """Function validating a block.
         
@@ -25,9 +41,14 @@ class BlockchainValidator:
             block: Block to validate.
             
         Raises:
+            InvalidBlockNumber: Thrown when a block has an invalid number.
             InvalidHash: Thrown when a hash of a block doesn't match a hash in field
                 or if some of hashes is invalid.
         """
+
+        # Check num
+        if block.num < 1:
+            raise InvalidBlockNumber("New number of block is less than 1!")
 
          # Check prev_hash
         if not self.hash_manager.is_valid_hash(block.prev_hash):
@@ -51,6 +72,16 @@ class BlockchainValidator:
             InvalidBlockOrder: List with Blocks is not ascending ordered or with gaps.
             InvalidLink: When one of blocks references invalid previous Block.
         """
+
+        # Handle empty Blockchain
+        if len(chain.blocks) == 0:
+            if chain.hash != self.hash_manager.reserved_prev_hash():
+                raise InvalidHash("Hash of a Blockchain has invalid value.")
+
+            if chain.num != 0:
+                raise InvalidBlockchainNumber("Number of a Blockchain is invalid.")
+
+            return
 
         # Get the last Block and validate fields
         last_block = chain.blocks[-1]

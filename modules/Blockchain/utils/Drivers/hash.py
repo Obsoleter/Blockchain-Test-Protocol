@@ -1,5 +1,5 @@
 import hashlib
-from ..blockchain import Block, HashManager
+from ...blockchain import Block, HashManager
 
 
 HASH_ALGORITHM = hashlib.sha1

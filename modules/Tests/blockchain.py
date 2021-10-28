@@ -1,5 +1,6 @@
 from modules.Blockchain.blockchain import Block, Blockchain
-import modules.Blockchain.blockchain_factory as factory
+import modules.Blockchain.validation_utils.factories as factory
+import modules.Blockchain.storage_utils.factory as storage_factory
 
 
 def print_block(block: Block):
@@ -19,29 +20,16 @@ def print_blockchain(chain: Blockchain):
     print('``````````')
 
 
-blocks = []
 
-# Block 1
-num = 1
-data = b"Hello baka!"
-block1 = factory.BlockFactory().create_block(num, data)
-blocks.append(block1)
+# Test Blockchain
+chain_factory = storage_factory.StoredBlockchainFactory()
+chain = chain_factory.create_storage()
 
+# chain.append_block(Block(b'', b'', 2, b"Pog"))
+# chain.append_block(Block(b'', b'', 2, b"Pog Champ!"))
+# chain.append_block(Block(b'', b'', 2, b"Hi!"))
 
-# Block 2
-num = 2
-data = b"Sussy baka!"
-block2 = factory.BlockFactory().create_block(num, data, block1)
-blocks.append(block2)
+chain.set_block(chain.get_block(3), 2)
 
-
-# Block 3
-num = 3
-data = b"Choosen one!"
-block3 = factory.BlockFactory().create_block(num, data, block2)
-blocks.append(block3)
-
-
-# Blockchain
-chain = factory.BlockchainFactory().create_blockchain(blocks)
 print_blockchain(chain)
+
