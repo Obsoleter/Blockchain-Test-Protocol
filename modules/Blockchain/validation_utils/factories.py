@@ -2,6 +2,7 @@ from typing import List
 
 from ..utils.Drivers.hash import HashManagerDriver
 from ..validated_blockchain import Block, ValidatedBlockchain, Blockchain
+from ..server_blockchain import ServerBlockchain
 
 from ..validator import BlockchainValidator
 
@@ -45,3 +46,21 @@ class ValidatorFactory:
         hash_manager = HashManagerDriver()
 
         return BlockchainValidator(hash_manager)
+
+
+class ServerBlockchainFactory:
+    """Factory for Server Blockchain."""
+
+    def __init__(self) -> None:
+        """Factory constructor."""
+
+    def create(self, header: Blockchain) -> ServerBlockchain:
+        """Creates Server Blockchain.
+        
+        Returns:
+            Constructed Server Blockchain.
+        """
+
+        validator = ValidatorFactory().create()
+
+        return ServerBlockchain(validator, header)

@@ -22,6 +22,10 @@ class HashManagerDriver(HashManager):
         return hash.digest()
 
 
+    def get_hash_len(self) -> int:
+        return HASH_SIZE
+
+
     def is_valid_hash(self, hash: bytes) -> bool:
         return len(hash) == HASH_SIZE
 

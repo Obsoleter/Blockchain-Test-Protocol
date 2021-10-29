@@ -65,3 +65,8 @@ class StoredBlockchain(ValidatedBlockchain):
         """
 
         super().remove_block(num)
+
+    def clear(self):
+        """Clears Blockchain."""
+
+        super().clear()

@@ -1,3 +1,4 @@
+from typing import Union
 from .blockchain import Blockchain, Block, HashManager
 
 # Import Raises
@@ -16,22 +17,35 @@ class BlockchainValidator:
 
         self.hash_manager = hash_manager
 
-    def validate_block_by_number(self, chain: Blockchain, num: int):
-        """Checks if a block number is valid and not out of bounds.
-        
-        Throws exception if is not.
+    def validate_link(self, block: Block, pointer: Union[Blockchain, Block]):
+        """Validates a reference to block.
         
         Args:
-            chain: Blockchain to find a block in.
-            num: Number of block to check.
+            block: Referenced block.
+            pointer: Pointer to the referenced block.
+                Could be Blockchain instance if it's the last Block in this Blockchain
+                and the first to insert. In this case pointer is Header of Blockchain.
+
+                Could be Block instance. In this case pointer is the next block.
             
         Raises:
-            InvalidBlockNumber: Invalid block number was given or block with this num doesn't exist.
+            InvalidLink: If the reference is invalid.
         """
 
-        if num < 1 or num > chain.num:
-            raise InvalidBlockNumber(f"Invalid block number: {num}!")
+        if isinstance(pointer, Blockchain):
+            if block.hash != pointer.hash:
+                raise InvalidLink("Invalid Last Block Hash!")
 
+            elif block.num != pointer.num:
+                raise InvalidLink("Invalid Last Block number!")
+
+        elif isinstance(pointer, Block):
+            if block.hash != pointer.prev_hash:
+                raise InvalidLink("Invalid Block hash reference!")
+            
+            elif block.num != pointer.num - 1:
+                raise InvalidLink("Invalid Block number reference!")
+            
     def validate_block(self, block: Block):
         """Function validating a block.
         
@@ -50,13 +64,18 @@ class BlockchainValidator:
         if block.num < 1:
             raise InvalidBlockNumber("New number of block is less than 1!")
 
-         # Check prev_hash
-        if not self.hash_manager.is_valid_hash(block.prev_hash):
-            raise InvalidHash('prev_field hash format is not appropriated for the current algorithm!')
-
         # Check hash
         if block.hash != self.hash_manager.hash_block(block):
             raise InvalidHash('Hash argument doesn\'t match a hash of block!')
+
+        # Check prev_hash
+        if block.num == 1:
+            if block.prev_hash != self.hash_manager.reserved_prev_hash():
+                raise InvalidHash("Invalid prev_hash value of the first block!")
+                
+        else:
+            if not self.hash_manager.is_valid_hash(block.prev_hash):
+                raise InvalidHash('prev_field hash format is not appropriated for the current algorithm!')
 
     def validate_blockchain(self, chain: Blockchain):
         """Function validating a blockchain.

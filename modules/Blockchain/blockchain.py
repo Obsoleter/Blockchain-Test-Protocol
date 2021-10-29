@@ -86,7 +86,7 @@ class Block:
 
         return self.prev_hash
 
-    def link_prev_block(self, prev: Union['Block', bytes] = None):
+    def link_prev_block(self, prev: Union['Block', bytes]):
         """Links the previous block to the current block.
         
         Args:
@@ -287,6 +287,11 @@ class Blockchain:
         block = self.blocks[index]
         self.blocks.remove(block)
 
+    def clear(self):
+        """Clears Blockchain."""
+
+        self.blocks.clear()
+
 
 # Interfaces
 class HashManager:
@@ -306,6 +311,13 @@ class HashManager:
             
         Returns:
             Encoded bytes array.
+        """
+
+    def get_hash_len(self) -> int:
+        """Get Algorithm Hash Length.
+        
+        Returns:
+            Hash size in bytes.
         """
 
     def is_valid_hash(self, hash: bytes) -> bool:

@@ -1,12 +1,22 @@
-from modules.Sockets.server import SERVER_PORT, SERVER_ADDRESS
-import modules.Header.headers
-import modules.Sockets.headers
+from modules.Protocol.header import ProtocolPacket
+import modules.Protocol.blockchain.header as ProtocolHeader
+import modules.Protocol.blockchain.operations as ProtocolOperations
 
-import socket
-import time
+import modules.Sockets.blockchain.protocol as BlockchainProtocol
+from modules.Sockets.blockchain.protocol_factory import BlockchainNetworkManagerFactory, BlockchainNetworkManager
+
+from modules.Blockchain.blockchain import Block, Blockchain
+from modules.Blockchain.validation_utils.factories import ServerBlockchainFactory
+from modules.Blockchain.storage_utils.factory import StoredBlockchainFactory
+
+from modules.Network.servers import TRUSTED_SERVERS
+
+from .blockchain import print_block, print_blockchain
+
+import socket, sys
 
 
-def print_header(header: modules.Header.headers.TestMessageHeader):
+def print_header(header: ProtocolPacket):
     print('==========')
     print(header.size)
     print(header.operation)
@@ -16,34 +26,60 @@ def print_header(header: modules.Header.headers.TestMessageHeader):
 
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-manager = modules.Sockets.headers.TestHeaderNetworkManager(server)
+manager = BlockchainNetworkManagerFactory.create(server, ProtocolHeader.BlockchainProtocolPacket)
 
-server.connect((SERVER_ADDRESS, SERVER_PORT))
+is_connected = False
+for addr in TRUSTED_SERVERS:
+    try:
+        server.connect(addr)
 
-# Connect
-header = modules.Header.headers.TestOperationClientConnect()
+    except ConnectionRefusedError:
+        pass
+
+    else:
+        is_connected = True
+        break
+
+if not is_connected:
+    print("Can't connect any trusted server...")
+    sys.exit()
+
+# Ask Header
+header = ProtocolOperations.LedgerAskHeader()
 manager.send(header)
-print_header(header)
 
-# Get answer
+# Get Header
 header = manager.recv()
-print_header(header)
+chain = ServerBlockchainFactory().create(manager.decode_header(header))
 
-# Send Info Request
-header = modules.Header.headers.TestOperationClientGet()
+# Ask Ledger
+header = ProtocolOperations.LedgerAsk()
 manager.send(header)
-print_header(header)
 
-# Get Info 3 Times
-header = manager.recv()
-print_header(header)
+# Get Ledger
+if chain.num > 0:
+    block = manager.decode_block(manager.recv())
+    
+    while chain.insert_block(block):
+        block = manager.decode_block(manager.recv())
 
-header = manager.recv()
-print_header(header)
 
-header = manager.recv()
-print_header(header)
+stored_chain = StoredBlockchainFactory().create('client')
+stored_chain.clear()
 
-# Get Disconnect
-header = manager.recv()
-print_header(header)
+for n in range(0, chain.num):
+    block = chain.get_block(n)
+    stored_chain.append_block(block)
+
+# stored_chain.append_block(Block(b'', b'', 0, b"Helol!"))
+
+# block = stored_chain.get_block(stored_chain.get_num())
+
+# header = ProtocolOperations.BlockAdd(block)
+# manager.send(header)
+
+# respond = manager.recv()
+# print(f'Operation respond: {respond.operation}!')
+# print(respond.payload)
+
+print_blockchain(stored_chain)

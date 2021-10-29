@@ -111,3 +111,10 @@ class ValidatedBlockchain(Blockchain):
         
         if num <= len(self):
             self.recalculate_blockchain(num)
+
+    def clear(self):
+        """Clears Blockchain."""
+
+        super().clear()
+        self.hash = self.hash_manager.reserved_prev_hash()
+        self.num = 0

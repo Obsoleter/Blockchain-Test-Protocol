@@ -58,6 +58,11 @@ class BlockchainFileStorage(StoredBlockchain):
 
         self.update_header()
 
+    def clear(self):
+        super().clear()
+
+        self.write_blockchain_header(self)
+
     # Driver methods
     def update_header(self):
         last_block = super().get_block(len(self))

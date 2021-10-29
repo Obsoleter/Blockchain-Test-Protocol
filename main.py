@@ -1,30 +1,41 @@
 import sys
+from modules.Network.servers import TRUSTED_SERVERS
 
 
 # Choosing client or server
-def client():
-    import modules.Sockets.client as client
-    client.main()
+def client(path: str):
+    import modules.Client.client as client
+    client.main(path)
 
-def server():
-    import modules.Sockets.server as server
-    server.main()
+def server(path: str, index: int):
+    import modules.Server.server as server
+    server.main(path, index)
 
 
 # Load function
 if __name__ == '__main__':
-    if sys.argv.__len__() != 2:
+    if sys.argv.__len__() < 3:
         print('Wrong number of arguments!')
-        print('Usage be like: main.py [server|client]')
+        print('Usage be like: main.py <blockchain path> [server|client]')
         sys.exit()
 
-    argument = sys.argv[1]
+    path = sys.argv[1]
 
-    if argument == 'client':
-        client()
+    mode = sys.argv[2]
 
-    elif argument == 'server':
-        server()
+    if mode == 'client':
+        client(path)
+
+    elif mode == 'server':
+        if len(sys.argv) < 4:
+            raise TypeError("Didn't find index argument for server!\n" + "Use: 'py main.py <blockchain path> server <index>")
+
+        else:
+            index = int(sys.argv[3])
+            if index < 0 or index >= len(TRUSTED_SERVERS):
+                raise IndexError("No trusted server with this index!\n" + f"Use index from {0} to {len(TRUSTED_SERVERS) - 1}")
+
+            server(path, index)
 
     else:
-        print('Unknown type of device!')
+        print('Unknown type of mode!')

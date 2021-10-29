@@ -12,10 +12,10 @@ class StoredBlockchainFactory:
     def __init__(self) -> None:
         """Factory constructor."""
 
-    def create_storage(self) -> Blockchain:
+    def create(self, path: str = 'blockchain') -> Blockchain:
         """Creates storage for Blockchain."""
 
         # Dependencies
         hash_manager = HashManagerDriver()
 
-        return BlockchainFileStorage(hash_manager)
+        return BlockchainFileStorage(hash_manager, path)

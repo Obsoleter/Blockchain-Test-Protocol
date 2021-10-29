@@ -1,13 +1,22 @@
-import modules.Header.headers
-import modules.Sockets.headers
-import modules.Sockets.server
+from modules.Protocol.header import ProtocolPacket
+
+# Blockchain protocol
+import modules.Protocol.blockchain.header as ProtocolHeader
+import modules.Protocol.blockchain.operations as ProtocolOperations
+
+# Networking
+import modules.Sockets.protocol as protocol
+import modules.Server.server
+
+# Blockchain storage
+import modules.Blockchain.storage_utils.factory as BlockchainFactory
 
 import threading
 import time
 import concurrent.futures
 
 
-def print_header(header: modules.Header.headers.TestMessageHeader):
+def print_header(header: ProtocolPacket):
     print('==========')
     print(header.size)
     print(header.operation)
@@ -16,40 +25,22 @@ def print_header(header: modules.Header.headers.TestMessageHeader):
     print('==========')
 
 
-server = modules.Sockets.server.server_listen()
+chain = BlockchainFactory.StoredBlockchainFactory().create()
+
+
+server = modules.Server.server.server_listen()
 
 client, addr = server.accept()
 
-manager = modules.Sockets.headers.TestHeaderNetworkManager(client)
+manager = protocol.ProtocolNetworkManager(client, ProtocolHeader.BlockchainProtocolPacket)
 
-# Wait for CLIENT_CONNECT
+# Wait for LEDGER_ASK
 header = manager.recv()
 print_header(header)
 
-# Send SERVER_CONNECTED
-header = modules.Header.headers.TestOperationServerConnected()
-manager.send(header)
-print_header(header)
-
-# Wait for CLIENT_GET
-header = manager.recv()
-print_header(header)
-
-# Send SERVER_SENT 3 Times
-header = modules.Header.headers.TestOperationServerSent(b'Hello Susy Baka!')
-manager.send(header)
-print_header(header)
-
-header = modules.Header.headers.TestOperationServerSent(b'Skibidi bab m-dada!')
-manager.send(header)
-print_header(header)
-
-header = modules.Header.headers.TestOperationServerSent(b'You\'re real sussy over there')
-manager.send(header)
-print_header(header)
-
-# Send SERVCER_DISCONNECTED
-header = modules.Header.headers.TestOperationServerDisconnected()
-manager.send(header)
-client.close()
-print_header(header)
+# Send LEDGER_RESPOND_BLOCK
+for n in range(chain.num, 0, -1):
+    block = chain.get_block(n)
+    header = ProtocolOperations.LedgerRespondBlock(block)
+    manager.send(header)
+    print_header(header)

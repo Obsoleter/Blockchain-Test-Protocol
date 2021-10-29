@@ -22,14 +22,13 @@ def print_blockchain(chain: Blockchain):
 
 
 # Test Blockchain
-chain_factory = storage_factory.StoredBlockchainFactory()
-chain = chain_factory.create_storage()
+# chain_factory = storage_factory.StoredBlockchainFactory()
+# chain = chain_factory.create_storage()
 
 # chain.append_block(Block(b'', b'', 2, b"Pog"))
 # chain.append_block(Block(b'', b'', 2, b"Pog Champ!"))
 # chain.append_block(Block(b'', b'', 2, b"Hi!"))
 
-chain.set_block(chain.get_block(3), 2)
+# chain.set_block(chain.get_block(3), 2)
 
-print_blockchain(chain)
-
+# print_blockchain(chain)
